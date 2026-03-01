@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AttendX Pro — Attendance & Payroll System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070810;--surface:#0f1020;--surface2:#161728;--surface3:#1e1f35;
+  --border:#252640;--border2:#2e3055;
+  --accent:#5b6af0;--accent2:#e05fff;--accent3:#00e5c0;--accent4:#ffb830;
+  --text:#eeeef5;--muted:#6a6b90;--muted2:#4a4b6a;
+  --success:#22d98a;--warning:#ffb830;--danger:#ff5c7a;--info:#4db8ff;
+  --r:12px;--r2:8px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ── LOGIN WRAPPER ── */
+#loginWrap{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.login-bg{position:absolute;inset:0;pointer-events:none}
+.login-orb{position:absolute;border-radius:50%;filter:blur(80px);opacity: 0.4;}
+.login-orb:nth-child(1){width:400px;height:400px;top:-100px;left:-100px;background:var(--accent)}
+.login-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:50px 50px;opacity:.2}
+
+.login-card{position:relative;background:rgba(15,16,32,.85);backdrop-filter:blur(20px);border:1px solid var(--border2);border-radius:24px;padding:40px;width:480px;box-shadow:0 40px 100px rgba(0,0,0,.6)}
+.login-brand{text-align:center;margin-bottom:24px}
+.brand-icon{width:44px;height:44px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:12px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px}
+
+/* ── AUTH TABS ── */
+.auth-tabs{display:flex;gap:4px;background:var(--surface2);padding:4px;border-radius:10px;margin-bottom:24px;border:1px solid var(--border)}
+.auth-tab{flex:1;padding:10px;text-align:center;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;border-radius:7px;color:var(--muted);transition:.2s}
+.auth-tab.active{background:var(--accent);color:#fff}
+
+.auth-panel{display:none}
+.auth-panel.active{display:block}
+
+/* ── INPUTS ── */
+.lf-group{margin-bottom:16px}
+.lf-label{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.lf-wrap{position:relative}
+.lf-input{width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:12px 12px 12px 40px;border-radius:10px;outline:none}
+.lf-input:focus{border-color:var(--accent)}
+.lf-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:0.6}
+.lf-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer;margin-top:10px}
+.lf-spinner{display:none;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;margin-left:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── APP (HIDDEN) ── */
+#app{display:none;padding:40px;text-align:center}
+</style>
+</head>
+<body>
+
+<div id="loginWrap">
+  <div class="login-bg"><div class="login-grid"></div><div class="login-orb"></div></div>
+  
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="brand-icon">🏢</div>
+      <h1 style="font-family:'Syne';font-weight:800;color:var(--accent)">AttendX</h1>
+      <p style="font-size:10px;color:var(--muted);letter-spacing:1px">ENTERPRISE SOLUTIONS</p>
+    </div>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tabLogin" onclick="switchTab('login')">🔑 Sign In</div>
+      <div class="auth-tab" id="tabRegister" onclick="switchTab('register')">📝 Register</div>
+    </div>
+
+    <div class="auth-panel active" id="panelLogin">
+      <div class="lf-group">
+        <label class="lf-label">Employee ID</label>
+        <div class="lf-wrap">
+          <span class="lf-icon">🆔</span>
+          <input type="text" class="lf-input" id="loginId" placeholder="EMP001">
+        </div>
+      </div>
+      <div class="lf-group">
+        <label class="lf-label">Password</label>
+        <div class="lf-wrap">
+          <span class="lf-icon">🔐</span>
+          <input type="password" class="lf-input" id="loginPass" placeholder="••••••••">
+        </div>
+      </div>
+      <button class="lf-btn" onclick="handleAuth('login')">Sign In <span class="lf-spinner" id="loginSpin"></span></button>
+    </div>
+
+    <div class="auth-panel" id="panelRegister">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="lf-group">
+          <label class="lf-label">Full Name</label>
+          <input type="text" class="lf-input" style="padding-left:12px" placeholder="John Doe">
+        </div>
+        <div class="lf-group">
+          <label class="lf-label">Employee ID</label>
+          <input type="text" class="lf-input" style="padding-left:12px" placeholder="EMP008">
+        </div>
+      </div>
+      <div class="lf-group">
+        <label class="lf-label">Email Address</label>
+        <input type="email" class="lf-input" style="padding-left:12px" placeholder="john@company.com">
+      </div>
+      <div class="lf-group">
+        <label class="lf-label">Password</label>
+        <input type="password" class="lf-input" style="padding-left:12px" placeholder="Min 6 characters">
+      </div>
+      <button class="lf-btn" onclick="handleAuth('register')">Create Account <span class="lf-spinner" id="regSpin"></span></button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <h1 style="font-family:'Syne';font-size:40px">Welcome Back!</h1>
+  <p style="color:var(--muted);margin-top:10px">Your dashboard is loading...</p>
+  <button class="lf-btn" style="width:200px;margin-top:20px" onclick="location.reload()">Logout</button>
+</div>
+
+<script>
+  // Function to switch tabs
+  function switchTab(type) {
+    const loginP = document.getElementById('panelLogin');
+    const regP = document.getElementById('panelRegister');
+    const loginT = document.getElementById('tabLogin');
+    const regT = document.getElementById('tabRegister');
+
+    if (type === 'login') {
+      loginP.classList.add('active');
+      regP.classList.remove('active');
+      loginT.classList.add('active');
+      regT.classList.remove('active');
+    } else {
+      regP.classList.add('active');
+      loginP.classList.remove('active');
+      regT.classList.add('active');
+      loginT.classList.remove('active');
+    }
+  }
+
+  // Function to handle login/register simulation
+  function handleAuth(mode) {
+    const spinner = document.getElementById(mode === 'login' ? 'loginSpin' : 'regSpin');
+    spinner.style.display = 'inline-block';
+
+    setTimeout(() => {
+      if(mode === 'login') {
+        document.getElementById('loginWrap').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+      } else {
+        alert('Account created! Please login.');
+        spinner.style.display = 'none';
+        switchTab('login');
+      }
+    }, 1500);
+  }
+</script>
+
+</body>
+</html>
